@@ -1,0 +1,229 @@
+/* Stats Cards */
+.stat-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: none;
+    border-radius: 15px;
+    background: linear-gradient(145deg, #ffffff, #f5f7fa);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.stat-icon i {
+    font-size: 1.4rem;
+    color: white;
+}
+
+/* Welcome Section */
+.welcome-section {
+    background: linear-gradient(145deg, #ffffff, #f8f9fa);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.welcome-section h1 {
+    color: #2d3748;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+/* Recent Activities Cards */
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    background: linear-gradient(145deg, #ffffff, #f5f7fa);
+    overflow: hidden;
+}
+
+.card-header {
+    background: transparent;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    padding: 1.25rem;
+}
+
+.card-header h5 {
+    font-weight: 600;
+    color: #2d3748;
+}
+
+/* List Items */
+.list-group-item {
+    padding: 1rem 1.25rem;
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.list-group-item:hover {
+    border-left-color: #3182ce;
+    background-color: #f8fafc;
+    transform: translateX(5px);
+}
+
+.list-group-item h6 {
+    color: #2d3748;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+}
+
+.list-group-item small {
+    color: #718096;
+}
+
+/* Badges */
+.badge.rounded-pill {
+    padding: 0.5em 1em;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Buttons */
+.btn-outline-primary {
+    border-radius: 8px;
+    padding: 0.4rem 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container-fluid {
+        padding: 1rem;
+    }
+    
+    .welcome-section {
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+    }
+}
+
+/* Custom Scrollbar */
+.card-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.card-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.card-body::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.card-body::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* List Group Items Styling */
+.list-group-item {
+    padding: 1rem 1.25rem;
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.list-group-item:hover {
+    border-left-color: #3182ce;
+    background-color: #f8fafc;
+    transform: translateX(5px);
+}
+
+.project-info, .task-info {
+    flex: 1;
+    min-width: 0; /* Để tránh overflow */
+}
+
+.project-info h6, .task-info h6 {
+    color: #2d3748;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 0.5em 1em;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    min-width: 100px;
+    text-align: center;
+}
+
+/* Metadata styling */
+small.text-muted {
+    font-size: 0.8125rem;
+    color: #718096 !important;
+}
+
+small.text-muted i {
+    width: 16px;
+    text-align: center;
+}
+
+/* Hover effect for links */
+.list-group-item {
+    text-decoration: none !important;
+}
+
+.list-group-item:hover h6 {
+    color: #3182ce;
+}
+
+/* Empty state styling */
+.list-group:empty::after {
+    content: 'Không có dữ liệu';
+    display: block;
+    text-align: center;
+    padding: 2rem;
+    color: #718096;
+    font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .status-badge {
+        min-width: 90px;
+        font-size: 0.7rem;
+    }
+    
+    .project-info h6, .task-info h6 {
+        font-size: 0.9rem;
+    }
+    
+    small.text-muted {
+        font-size: 0.75rem;
+    }
+}

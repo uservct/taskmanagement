@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:replace="~{base :: layout(~{::title}, ~{::section}, ~{::additionalCss}, ~{::additionalJs})}">
+<head>
+    <title>Quản lý công việc - Task Management System</title>
+    <additionalCss>
+        <link rel="stylesheet" th:href="@{/css/tasks/index.css}">
+    </additionalCss>
+</head>
+<body>
+    <section class="container-fluid py-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-list-ul me-2"></i>Danh sách công việc của tôi
+                            </h5>
+                        </div>
+                        
+                        <!-- Thêm phần tìm kiếm và bộ lọc -->
+                        <div class="filters-section mb-4">
+                            <div class="row g-3">
+                                <!-- Search box -->
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                        <input type="text" id="taskSearch" class="form-control" placeholder="Tìm kiếm công việc...">
+                                    </div>
+                                </div>
+
+                                <!-- Project filter -->
+                                <div class="col-md-2 d-none">
+                                    <select class="form-select" id="projectFilter">
+                                        <option value="">Tất cả dự án</option>
+                                        <option th:each="project : ${projects}" 
+                                                th:value="${project.id}"
+                                                th:text="${project.name}">Tên dự án</option>
+                                    </select>
+                                </div>
+
+                                <!-- Status filter -->
+                                <div class="col-md-2">
+                                    <select class="form-select" id="statusFilter">
+                                        <option value="">Tất cả trạng thái</option>
+                                        <option value="TODO">Chưa bắt đầu</option>
+                                        <option value="IN_PROGRESS">Đang thực hiện</option>
+                                        <option value="REVIEW">Đang xem xét</option>
+                                        <option value="DONE">Hoàn thành</option>
+                                    </select>
+                                </div>
+
+                                <!-- Tag filter -->
+                                <div class="col-md-2">
+                                    <select class="form-select" id="tagFilter">
+                                        <option value="">Tất cả tag</option>
+                                        <option value="FRONTEND">Frontend</option>
+                                        <option value="BACKEND">Backend</option>
+                                        <option value="DATABASE">Database</option>
+                                        <option value="TESTING">Testing</option>
+                                        <option value="DOCUMENTATION">Documentation</option>
+                                    </select>
+                                </div>
+
+                                <!-- Due date filter -->
+                                <div class="col-md-2">
+                                    <select class="form-select" id="dueDateFilter">
+                                        <option value="">Tất cả thời hạn</option>
+                                        <option value="overdue">Quá hạn</option>
+                                        <option value="today">Hôm nay</option>
+                                        <option value="tomorrow">Ngày mai</option>
+                                        <option value="week">Tuần này</option>
+                                        <option value="month">Tháng này</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Task list -->
+                        <div class="task-list">
+                            <div th:each="task : ${tasks}" class="task-item" th:divTask="${task.id}">
+                                <div class="task-content">
+                                    <!-- Left Column -->
+                                    <div class="task-left-col">
+                                        <div class="task-header-group">
+                                            <h6 class="task-title" th:text="${task.name}">Thiết kế giao diện</h6>
+                                            <span th:if="${task.dueDate != null and task.dueDate.isBefore(T(java.time.LocalDate).now()) and task.status.name() != 'DONE'}"
+                                                  class="task-badge task-badge-overdue">
+                                                <i class="fas fa-exclamation-circle me-1"></i>
+                                                Quá hạn
+                                            </span>
+                                        </div>
+                                        
+                                        <!-- Add Assignees Section -->
+                                        <div class="task-assignees-group">
+                                            <div class="assignee-icon-wrapper">
+                                                <i class="fas fa-users me-1"></i>
+                                            </div>
+                                            <div class="assignee-avatars">
+                                                <div th:each="assignee, iterStat : ${task.assignees}" 
+                                                     class="assignee-avatar-wrapper">
+                                                    <img th:src="${assignee.avatarUrl}"
+                                                         th:alt="${assignee.name}"
+                                                         class="assignee-avatar"
+                                                         th:title="${assignee.name}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="task-date-group">
+                                            <div class="date-icon-wrapper">
+                                                <i class="fas fa-calendar-days"></i>
+                                            </div>
+                                            <span class="task-date" th:text="${task.startDate != null ? #temporals.format(task.startDate, 'dd/MM/yyyy') : 'Chưa có'}">
+                                                01/01/2023
+                                            </span>
+                                            <span class="task-date-separator">-</span>
+                                            <span class="task-date" th:text="${task.dueDate != null ? #temporals.format(task.dueDate, 'dd/MM/yyyy') : 'Chưa có'}">
+                                                31/12/2023
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Middle Column -->
+                                    <div class="task-middle-col">
+                                        <div class="task-description-wrapper">
+                                            <p class="task-description formatted-description" 
+                                               th:text="${task.description ?: 'Chưa có mô tả cho công việc này'}">
+                                                Mô tả công việc
+                                            </p>
+                                            <div class="task-tags">
+                                                <span class="task-tag" 
+                                                      th:if="${task.tag != null}" 
+                                                      th:text="${task.tag}">
+                                                    Frontend
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Right Column -->
+                                    <div class="task-right-col">
+                                         <!-- Project Link -->
+                                         <div class="project-link-group">
+                                            <i class="fas fa-project-diagram text-primary"></i>
+                                            <a th:href="@{'/projects/' + ${task.projectId}}" 
+                                               class="project-link" 
+                                               th:text="${task.projectName}">
+                                                Tên dự án
+                                            </a>
+                                        </div>
+                                        <div class="task-status-group">
+                                            <span class="status-label">Trạng thái</span>
+                                            <div class="dropdown status-dropdown">
+                                                <button class="status-badge dropdown-toggle" 
+                                                        type="button"
+                                                        data-bs-toggle="dropdown"
+                                                        th:data-task-id="${task.id}"
+                                                        th:classappend="${
+                                                            task.status.name() == 'TODO' ? 'status-todo' :
+                                                            task.status.name() == 'IN_PROGRESS' ? 'status-progress' :
+                                                            task.status.name() == 'REVIEW' ? 'status-review' :
+                                                            task.status.name() == 'DONE' ? 'status-done' : ''
+                                                        }">
+                                                    <i class="fas fa-circle"></i>
+                                                    <span th:text="${
+                                                        task.status.name() == 'TODO' ? 'Chưa bắt đầu' :
+                                                        task.status.name() == 'IN_PROGRESS' ? 'Đang thực hiện' :
+                                                        task.status.name() == 'REVIEW' ? 'Đang xem xét' :
+                                                        task.status.name() == 'DONE' ? 'Hoàn thành' : ''
+                                                    }">Đang thực hiện</span>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" href="#" data-status="TODO">Chưa bắt đầu</a></li>
+                                                    <li><a class="dropdown-item" href="#" data-status="IN_PROGRESS">Đang thực hiện</a></li>
+                                                    <li><a class="dropdown-item" href="#" data-status="REVIEW">Đang xem xét</a></li>
+                                                    <li><a class="dropdown-item" href="#" data-status="DONE">Hoàn thành</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="task-update-group">
+                                            <span class="update-label">Cập nhật</span>
+                                            <span class="update-time" 
+                                                  th:text="${#temporals.format(task.updatedAt, 'dd/MM/yyyy')}">
+                                                26/10/2023
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+<additionalJs>
+    <script th:src="@{/js/tasks/index.js}"></script>
+</additionalJs>
+</html>

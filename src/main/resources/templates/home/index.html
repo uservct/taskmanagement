@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{base :: layout(~{::title}, ~{::content}, ~{::additionalCss}, ~{::additionalJs})}">
+<head>
+    <title>Dashboard - Task Management</title>
+    <additionalCss>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+        <link rel="stylesheet" th:href="@{/css/home/index.css}">
+    </additionalCss>
+</head>
+<body>
+    <content class="container-fluid py-4">
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+            <h1 class="h3">
+                <i class="fas fa-chart-line me-2"></i>Dashboard
+            </h1>
+            <p class="text-muted mb-0">Xin chào, <span th:text="${#authentication.name}" class="fw-bold">User</span>!</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card stat-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-2">Dự án đang thực hiện</h6>
+                                <h3 class="mb-0 fw-bold" th:text="${activeProjects}">0</h3>
+                            </div>
+                            <div class="stat-icon bg-primary">
+                                <i class="fas fa-project-diagram"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-2">Công việc chưa hoàn thành</h6>
+                                <h3 class="mb-0" th:text="${pendingTasks}">0</h3>
+                            </div>
+                            <div class="stat-icon bg-warning">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-2">Công việc sắp đến hạn</h6>
+                                <h3 class="mb-0" th:text="${upcomingDeadlines}">0</h3>
+                            </div>
+                            <div class="stat-icon bg-danger">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="row g-4">
+            <!-- Recent Projects -->
+            <div class="col-12 col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-project-diagram me-2"></i>Dự án gần đây
+                            </h5>
+                            <a href="/projects" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-arrow-right me-1"></i>Xem tất cả
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            <a th:each="project : ${recentProjects}" 
+                               th:href="@{'/projects/' + ${project.id}}"
+                               class="list-group-item list-group-item-action">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="project-info">
+                                        <h6 class="mb-1" th:text="${project.name}">Project Name</h6>
+                                        <small class="text-muted">
+                                            <i class="far fa-calendar-alt me-1"></i>
+                                            <span th:text="${#temporals.format(project.dueDate, 'dd/MM/yyyy')}">Due Date</span>
+                                        </small>
+                                    </div>
+                                    <span class="badge rounded-pill status-badge" 
+                                          th:classappend="${project.status.name() == 'COMPLETED' ? 'bg-success' : 
+                                                          project.status.name() == 'IN_PROGRESS' ? 'bg-primary' : 'bg-secondary'}"
+                                          th:text="${project.status.name() == 'COMPLETED' ? 'Hoàn thành' :
+                                                   project.status.name() == 'IN_PROGRESS' ? 'Đang thực hiện' : 'Chưa bắt đầu'}">
+                                    </span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Tasks -->
+            <div class="col-12 col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-tasks me-2"></i>Công việc gần đây
+                            </h5>
+                            <a href="/tasks" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-arrow-right me-1"></i>Xem tất cả
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            <a th:each="task : ${recentTasks}" 
+                               th:href="@{'/projects/' + ${task.projectId}}"
+                               class="list-group-item list-group-item-action">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="task-info">
+                                        <h6 class="mb-1" th:text="${task.name}">Task Name</h6>
+                                        <small class="text-muted">
+                                            <i class="fas fa-project-diagram me-1"></i>
+                                            <span th:text="${task.projectName}">Project Name</span>
+                                            <div class="d-flex align-items-center">
+                                                <i class="far fa-calendar-alt me-1"></i>
+                                                <span th:text="${#temporals.format(task.dueDate, 'dd/MM/yyyy')}">Due Date</span>
+                                            </div>
+                                        </small>
+                                    </div>
+                                    <span class="badge rounded-pill status-badge" 
+                                          th:classappend="${task.status.name() == 'DONE' ? 'bg-success' : 
+                                                          task.status.name() == 'IN_PROGRESS' ? 'bg-primary' : 
+                                                          task.status.name() == 'REVIEW' ? 'bg-warning' : 'bg-secondary'}"
+                                          th:text="${task.status.name() == 'DONE' ? 'Hoàn thành' :
+                                                   task.status.name() == 'IN_PROGRESS' ? 'Đang làm' :
+                                                   task.status.name() == 'REVIEW' ? 'Đang xem xét' : 'Chưa bắt đầu'}">
+                                    </span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </content>
+
+    <additionalJs>
+        <script th:src="@{/js/home/index.js}"></script>
+    </additionalJs>
+</body>
+</html>

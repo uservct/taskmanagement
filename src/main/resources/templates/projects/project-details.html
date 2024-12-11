@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:replace="~{base :: layout(~{::title}, ~{::content}, ~{::additionalCss}, ~{::additionalJs})}">
+<head>
+    <title th:text="${project.name + ' - Chi tiết dự án'}">Chi tiết dự án - Task Management System</title>
+    <additionalCss>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+        <link rel="stylesheet" th:href="@{/css/projects/project-detail.css}">
+    </additionalCss>
+</head>
+<body>
+    <content class="container-fluid py-5">
+        <div class="row">
+            <div class="col-lg-8 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="project-header" th:attr="data-project-id=${project.id}">
+                            <div class="project-actions">
+                                <button class="btn btn-documents" document-project-button data-project-id="${project.id}" data-bs-toggle="modal" data-bs-target="#projectDocumentsModal">
+                                    <i class="fas fa-file-alt me-1"></i>Tài liệu
+                                </button>
+                                
+                                <button class="btn btn-discussions" discussion-project-button data-project-id="${project.id}" data-bs-toggle="modal" data-bs-target="#projectDiscussionsModal">
+                                    <i class="fas fa-comments me-1"></i>Thảo luận
+                                </button>
+                                
+                                <a sec:authorize="hasRole('ADMIN')" th:href="@{/projects/{id}/edit(id=${project.id})}" class="btn btn-edit">
+                                    <i class="fas fa-edit me-1"></i>Chỉnh sửa
+                                </a>
+                                
+                                <button sec:authorize="hasRole('ADMIN')" class="btn btn-delete" th:attr="delete-project-button=${project.id}">
+                                    <i class="fas fa-trash-alt me-1"></i>Xóa
+                                </button>
+                            </div>
+                            
+                            <h1 class="project-title">
+                                <i class="fas fa-project-diagram me-2"></i>
+                                <span th:text="${project.name}" class="text-dark font-weight-bold ">Project Name</span>
+                            </h1>
+                            
+                            
+                        </div>
+                        <div class="project-description formatted-description mb-4" th:text="${project.description ?: 'Chưa có mô tả cho dự án này'}">
+                            Mô tả dự án
+                        </div>
+                        <div class="project-info-grid">
+                            <div class="info-item">
+                                <h6 class="info-label"><i class="fas fa-calendar-alt me-2"></i>Thời gian</h6>
+                                <p class="info-value">
+                                    <span th:text="${#temporals.format(project.startDate, 'dd/MM/yyyy')}">01/01/2023</span>
+                                    -
+                                    <span th:text="${#temporals.format(project.dueDate, 'dd/MM/yyyy')}">31/12/2023</span>
+                                </p>
+                            </div>
+
+                            <div class="info-item">
+                                <h6 class="info-label"><i class="fas fa-tag me-2"></i>Tag</h6>
+                                <span class="badge bg-info info-value text-white" th:text="${project.tag}">Website</span>
+                            </div>
+
+                            <div class="info-item">
+                                <h6 class="info-label"><i class="fas fa-flag me-2"></i>Độ ưu tiên</h6>
+                                <div class="priority-indicator info-value" th:classappend="${'priority-' + project.priority.name().toLowerCase()}">
+                                    <i class="fas fa-flag"></i>
+                                    <span th:text="${project.priority}">HIGH</span>
+                                </div>
+                            </div>
+
+                            <div class="info-item">
+                                <h6 class="info-label"><i class="fas fa-tasks me-2"></i>Trạng thái</h6>
+                                <span class="badge info-value text-white"
+                                      th:text="${
+                                          project.status.name() == 'PLANNING' ? 'Lập kế hoạch' :
+                                          project.status.name() == 'IN_PROGRESS' ? 'Đang tiến hành' : 
+                                          project.status.name() == 'ON_HOLD' ? 'Tạm dừng' :
+                                          project.status.name() == 'COMPLETED' ? 'Hoàn thành' :
+                                          project.status.name() == 'CANCELLED' ? 'Đã hủy' : project.status
+                                      }"
+                                      th:classappend="${
+                                          project.status.name() == 'PLANNING' ? 'bg-secondary' :
+                                          project.status.name() == 'IN_PROGRESS' ? 'bg-primary' :
+                                          project.status.name() == 'ON_HOLD' ? 'bg-warning' :
+                                          project.status.name() == 'COMPLETED' ? 'bg-success' :
+                                          project.status.name() == 'CANCELLED' ? 'bg-danger' : 'bg-info'
+                                      }">IN PROGRESS</span>
+                            </div>
+                        </div>
+                        <div class="project-members mt-4">
+                            <h5 class="section-title"><i class="fas fa-users me-2"></i>Thành viên dự án</h5>
+                            <div class="members-grid">
+                                <div th:each="member : ${members}" class="member-card">
+                                    <img th:src="${member.avatarUrl}" th:alt="${member.fullName}" class="member-avatar">
+                                    <div class="member-info">
+                                        <h5 class="member-name fw-bold mb-2" th:text="${member.fullName}">
+                                            Nguyễn Văn A
+                                        </h5>
+                                        
+                                        <p class="member-email fs-6 mb-1" th:text="${member.email}">
+                                            example@email.com
+                                        </p>
+                                        
+                                        <div class="member-position text-muted fs-6" th:text="${member.position}">
+                                            Developer
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cột bên phải: Thống kê và tiến độ -->
+            <div class="col-lg-4 mb-4">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body stats-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-chart-pie me-2"></i>Thống kê dự án
+                            </h5>
+                        </div>
+                        
+                        <!-- Progress Bar -->
+                        <div class="mb-3">
+                            <div class="progress-label">
+                                <span>Tiến độ tổng thể</span>
+                                <span class="progress-percentage" th:text="${#numbers.formatInteger(project.getProgress(), 0) + '%'}">75%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" 
+                                     th:style="'width: ' + ${project.getProgress()} + '%'"
+                                     th:aria-valuenow="${project.getProgress()}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100"> 
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stats Grid -->
+                        <div class="stats-grid">
+                            <div class="stats-item">
+                                <div class="stats-icon total">
+                                    <i class="fas fa-tasks"></i>
+                                </div>
+                                <div class="stats-value" th:text="${project.getTasksCount()}">20</div>
+                                <p class="stats-label">Tổng số task</p>
+                            </div>
+                            
+                            <div class="stats-item">
+                                <div class="stats-icon completed">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="stats-value" th:text="${project.getCompletedTasksCount()}">15</div>
+                                <p class="stats-label">Hoàn thành</p>
+                            </div>
+                            
+                            <div class="stats-item">
+                                <div class="stats-icon in-progress">
+                                    <i class="fas fa-spinner"></i>
+                                </div>
+                                <div class="stats-value" th:text="${project.getInProgressTasksCount()}">3</div>
+                                <p class="stats-label">Đang thực hiện</p>
+                            </div>
+                            
+                            <div class="stats-item">
+                                <div class="stats-icon not-started">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="stats-value" 
+                                     th:text="${project.getTasks().size() - project.getCompletedTasksCount() - project.getInProgressTasksCount()}">2</div>
+                                <p class="stats-label">Chưa bắt đầu</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card shadow-sm">
+                    <div class="card-body countdown-container">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-hourglass-half me-2"></i>Thời gian còn lại
+                            </h5>
+                        </div>
+                        <div class="countdown-wrapper">
+                            <div class="countdown-item">
+                                <div th:class="${project.getDaysLeft() < 1 ? 'countdown-value ending' : 'countdown-value'}" 
+                                     id="days" 
+                                     th:text="${project.getDaysLeft()}">30</div>
+                                <span class="countdown-label">Ngày</span>
+                            </div>
+                            <div class="countdown-item">
+                                <div th:class="${project.getDaysLeft() < 1 ? 'countdown-value ending' : 'countdown-value'}" 
+                                     id="hours" 
+                                     th:text="${project.getHoursLeft()}">12</div>
+                                <span class="countdown-label">Giờ</span>
+                            </div>
+                            <div class="countdown-item">
+                                <div th:class="${project.getDaysLeft() < 1 ? 'countdown-value ending' : 'countdown-value'}" 
+                                     id="minutes" 
+                                     th:text="${project.getMinutesLeft()}">45</div>
+                                <span class="countdown-label">Phút</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Danh sách task -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="card-title mb-0"><i class="fas fa-list-ul me-2"></i>Danh sách công việc</h5>
+                            <div class="d-flex gap-3">
+                                <!-- Search box -->
+                                <div class="search-box">
+                                    <input type="text" 
+                                           id="taskSearch" 
+                                           class="form-control form-control-sm" 
+                                           placeholder="Tìm kiếm công việc...">
+                                </div>
+
+                                <!-- Status filter -->
+                                <select id="statusFilter" class="form-select form-select-sm" style="width: auto;">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="TODO">Chưa bắt đầu</option>
+                                    <option value="IN_PROGRESS">Đang thực hiện</option>
+                                    <option value="REVIEW">Đang xem xét</option>
+                                    <option value="DONE">Hoàn thành</option>
+                                </select>
+
+                                <!-- Tag filter -->
+                                <select id="tagFilter" class="form-select form-select-sm" style="width: auto;">
+                                    <option value="">Tất cả tag</option>
+                                    <option value="FRONTEND">Frontend</option>
+                                    <option value="BACKEND">Backend</option>
+                                    <option value="DATABASE">Database</option>
+                                    <option value="TESTING">Testing</option>
+                                    <option value="DOCUMENTATION">Documentation</option>
+                                </select>
+
+                                <!-- Add task button -->
+                                <button sec:authorize="hasRole('ADMIN')"
+                                        class="btn btn-primary btn-sm" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#addTaskModal">
+                                    <i class="fas fa-plus me-1"></i>Thêm công việc
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Task list -->
+                        <div class="task-list">
+                            <div th:each="task : ${tasks}" class="task-item" th:attr="divTask=${task.id}">
+                                <div class="task-content">
+                                    <!-- Left Column -->
+                                    <div class="task-left-col">
+                                        <div class="task-header-group">
+                                            <h6 class="task-title" th:text="${task.name}">Thiết kế giao diện</h6>
+                                            <span th:if="${task.dueDate != null && task.dueDate.isBefore(T(java.time.LocalDate).now()) && task.status.name() != 'DONE'}" 
+                                                  class="task-badge task-badge-overdue">
+                                                <i class="fas fa-exclamation-circle me-1"></i>
+                                                Quá hạn
+                                            </span>
+                                        </div>
+                                        
+                                        <div class="task-assignees-group">
+                                            <i class="fas fa-users text-primary"></i>
+                                            <div class="assignee-avatars">
+                                                <div th:each="assignee, iterStat : ${task.assignees}" 
+                                                     class="assignee-avatar-wrapper">
+                                                    <img th:src="${assignee.avatarUrl}" 
+                                                         th:alt="${assignee.fullName}" 
+                                                         class="assignee-avatar"
+                                                         data-bs-toggle="tooltip" 
+                                                         th:title="${assignee.fullName}">
+                                                    <div class="assignee-status-indicator online"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="task-date-group">
+                                            <div class="date-icon-wrapper">
+                                                <i class="fas fa-calendar-days"></i>
+                                            </div>
+                                            <span class="task-date" th:text="${task.startDate != null ? #temporals.format(task.startDate, 'dd/MM/yyyy') : 'Chưa có hạn'}">01/01/2023</span>
+                                            <span class="task-date-separator">-</span>
+                                            <span class="task-date" th:text="${task.dueDate != null ? #temporals.format(task.dueDate, 'dd/MM/yyyy') : 'Chưa có hạn'}">31/12/2023</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Middle Column -->
+                                    <div class="task-middle-col">
+                                        <div class="task-description-wrapper">
+                                            <p class="task-description formatted-description" th:text="${task.description ?: 'Chưa có mô tả cho công việc này'}">
+                                                Mô tả công việc
+                                            </p>
+                                            <div class="task-tags">
+                                                <span class="task-tag" th:if="${task.tag != null}" th:text="${task.tag}">Frontend</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="task-right-col">
+                                        <div class="task-actions-group">
+                                            <!-- attachment button -->
+                                            <button class="task-btn task-btn-attachment" 
+                                                    title="Tài liệu"
+                                                    th:data-task-id="${task.id}">
+                                                <i class="fas fa-file-alt"></i>
+                                                <span>Tài liệu</span>
+                                            </button>
+                                            <!-- discussion button -->
+                                            <button class="task-btn task-btn-discussion" 
+                                                    title="Thảo luận"
+                                                    th:data-task-id="${task.id}">
+                                                <i class="fas fa-comments"></i>
+                                                <span>Thảo luận</span>
+                                            </button>
+                                            <button class="task-btn task-btn-edit" 
+                                                    sec:authorize="hasRole('ADMIN')"
+                                                    title="Chỉnh sửa"
+                                                    th:data-task-id="${task.id}">
+                                                <i class="fas fa-edit"></i>
+                                                <span>Sửa</span>
+                                            </button>
+                                            <button class="task-btn task-btn-delete" 
+                                                    sec:authorize="hasRole('ADMIN')"
+                                                    title="Xóa"
+                                                    th:data-task-id="${task.id}">
+                                                <i class="fas fa-trash-alt"></i>
+                                                <span>Xóa</span>
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="task-status-group">
+                                            <span class="status-label">Trạng thái</span>
+                                            <div class="status-badge-wrapper">
+                                                <span class="status-badge" 
+                                                      th:classappend="${
+                                                          task.status.name() == 'TODO' ? 'status-todo' :
+                                                          task.status.name() == 'IN_PROGRESS' ? 'status-progress' :
+                                                          task.status.name() == 'REVIEW' ? 'status-review' :
+                                                          task.status.name() == 'DONE' ? 'status-done' : ''
+                                                      }">
+                                                    <i class="fas fa-circle"></i>
+                                                    <span th:text="${
+                                                        task.status.name() == 'TODO' ? 'Chưa bắt đầu' :
+                                                        task.status.name() == 'IN_PROGRESS' ? 'Đang thực hiện' :
+                                                        task.status.name() == 'REVIEW' ? 'Đang xem xét' :
+                                                        task.status.name() == 'DONE' ? 'Hoàn thành' : ''
+                                                    }">Đang thực hiện</span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="task-update-group">
+                                            <span class="update-label">Cập nhật</span>
+                                            <span class="update-time" th:text="${#temporals.format(task.updatedAt, 'dd/MM/yyyy')}">26/10/2023</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal thêm task mới -->
+        <div class="modal fade" id="addTaskModal" tabindex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addTaskModalLabel">Thêm công việc mới</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addTaskForm">
+                            <div class="mb-3">
+                                <label for="taskName" class="form-label">Tên công việc:</label>
+                                <input type="text" class="form-control" id="taskName" name="name" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="taskDescription" class="form-label">Mô tả:</label>
+                                <textarea class="form-control" id="taskDescription" name="description" rows="3"></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="taskStartDate" class="form-label">Ngày bắt đầu:</label>
+                                <input type="date" class="form-control" id="taskStartDate" name="startDate">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="taskDueDate" class="form-label">Ngày đến hạn:</label>
+                                <input type="date" class="form-control" id="taskDueDate" name="dueDate">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Người thực hiện:</label>
+                                <div class="assignee-selection">
+                                    <input type="text" class="form-control mb-2" id="assigneeSearch" placeholder="Tìm kiếm thành viên...">
+                                    <div class="assignee-list">
+                                        <div th:each="member : ${members}" class="assignee-item mb-2">
+                                            <div class="form-check d-flex align-items-center">
+                                                <input class="form-check-input me-2" type="checkbox" 
+                                                       th:value="${member.id}" 
+                                                       name="assigneeIds"
+                                                       th:id="'assignee-' + ${member.id}">
+                                                <label class="form-check-label d-flex align-items-center" 
+                                                       th:for="'assignee-' + ${member.id}">
+                                                    <img th:src="${member.avatarUrl}" alt="Avatar" 
+                                                         class="rounded-circle me-2" 
+                                                         style="width: 32px; height: 32px;">
+                                                    <div>
+                                                        <span th:text="${member.fullName}" class="fw-bold"></span>
+                                                        <br>
+                                                        <small th:text="${member.email}" class="text-muted"></small>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        <button type="button" class="btn btn-primary" id="saveTaskBtn">Lưu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal sửa task -->
+        <div class="modal fade" id="editTaskModal" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editTaskModalLabel">Chỉnh sửa công việc</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editTaskForm">
+                            <input type="hidden" id="editTaskId" name="id">
+                            
+                            <div class="mb-3">
+                                <label for="editTaskName" class="form-label">Tên công việc:</label>
+                                <input type="text" class="form-control" id="editTaskName" name="name" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editTaskDescription" class="form-label">Mô tả:</label>
+                                <textarea class="form-control" id="editTaskDescription" name="description" rows="3"></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editTaskStartDate" class="form-label">Ngày bắt đầu:</label>
+                                <input type="date" class="form-control" id="editTaskStartDate" name="startDate">
+                            </div>
+
+
+                            <div class="mb-3">
+                                <label for="editTaskDueDate" class="form-label">Ngày đến hạn:</label>
+                                <input type="date" class="form-control" id="editTaskDueDate" name="dueDate">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editTaskStatus" class="form-label">Trạng thái:</label>
+                                <select class="form-select" id="editTaskStatus" name="status">
+                                    <option value="TODO">Chưa bắt đầu</option>
+                                    <option value="IN_PROGRESS">Đang thực hiện</option>
+                                    <option value="REVIEW">Đang xem xét</option>
+                                    <option value="DONE">Hoàn thành</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Người thực hiện:</label>
+                                <div class="assignee-selection">
+                                    <input type="text" class="form-control mb-2" id="editAssigneeSearch" placeholder="Tìm kiếm thành viên...">
+                                    <div class="assignee-list">
+                                        <div th:each="member : ${members}" class="assignee-item mb-2">
+                                            <div class="form-check d-flex align-items-center">
+                                                <input class="form-check-input me-2" type="checkbox" 
+                                                       th:value="${member.id}" 
+                                                       name="assigneeIds"
+                                                       th:id="'edit-assignee-' + ${member.id}">
+                                                <label class="form-check-label d-flex align-items-center" 
+                                                       th:for="'edit-assignee-' + ${member.id}">
+                                                    <img th:src="${member.avatarUrl}" alt="Avatar" 
+                                                         class="rounded-circle me-2" 
+                                                         style="width: 32px; height: 32px;">
+                                                    <div>
+                                                        <span th:text="${member.fullName}" class="fw-bold"></span>
+                                                        <br>
+                                                        <small th:text="${member.email}" class="text-muted"></small>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        <button type="button" class="btn btn-primary" id="updateTaskBtn">Cập nhật</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal thêm thông báo -->
+        <div class="modal fade" id="addAnnouncementModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-bottom-0">
+                        <h5 class="modal-title">
+                            <i class="fas fa-bullhorn me-2 text-primary"></i>Tạo thông báo mới
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body pt-0">
+                        <form th:action="@{/projects/{id}/announcements(id=${project.id})}" method="POST" class="announcement-form">
+                            <div class="mb-4">
+                                <label for="announcementTitle" class="form-label">Tiêu đề thông báo</label>
+                                <input type="text" class="form-control form-control-lg" 
+                                       id="announcementTitle" name="title" required 
+                                       placeholder="Nhập tiêu đề thông báo">
+                            </div>
+                            <div class="mb-4">
+                                <label for="announcementContent" class="form-label">Nội dung thông báo</label>
+                                <textarea class="form-control" id="announcementContent" 
+                                        name="content" rows="4" required 
+                                        placeholder="Nhập nội dung thông báo"></textarea>
+                            </div>
+                            <div class="text-end">
+                                <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Hủy</button>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="fas fa-paper-plane me-2"></i>Đăng thông báo
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thêm section thông báo ở cuối cùng -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-bell me-2"></i>Thông báo dự án
+                            </h5>
+                            <button sec:authorize="hasRole('ADMIN')"
+                                    class="btn btn-primary btn-sm" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#addAnnouncementModal">
+                                <i class="fas fa-plus me-1"></i>Tạo thông báo
+                            </button>
+                        </div>
+                        
+                        <!-- Grid layout cho thông báo -->
+                        <div class="announcement-grid">
+                            <div th:each="announcement : ${announcements}" class="announcement-item" 
+                                 th:attr="divAnnouncement=${announcement.id}">
+                                <div class="announcement-header d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <img th:src="${announcement.createdBy.avatarUrl}" 
+                                             th:alt="${announcement.createdBy.fullName}" 
+                                             class="announcement-avatar me-2">
+                                        <div>
+                                            <h6 class="mb-0" th:text="${announcement.createdBy.fullName}">Người tạo</h6>
+                                            <small class="text-muted" 
+                                                   th:text="${#temporals.format(announcement.createdAt, 'dd/MM/yyyy HH:mm')}">
+                                                Thời gian
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="dropdown" th:if="${#authentication.principal.username == announcement.createdBy.username}">
+                                        <button class="btn btn-link btn-sm p-0" data-bs-toggle="dropdown">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <button class="btn announcement-btn-delete text-danger align-items-center" 
+                                                        th:data-announcement-id="${announcement.id}"
+                                                        sec:authorize="hasRole('ADMIN')">
+                                                    <i class="fas fa-trash-alt me-1"></i>Xóa
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="announcement-content mt-3">
+                                    <h5 class="announcement-title mb-2" th:text="${announcement.title}">Tiêu đề thông báo</h5>
+                                    <p class="mb-0" th:text="${announcement.content}">Nội dung thông báo</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Hiển thị thông báo khi không có dữ liệu -->
+                            <div th:if="${#lists.isEmpty(announcements)}" class="text-center text-muted py-4">
+                                <i class="fas fa-bell-slash fa-2x mb-2"></i>
+                                <p>Chưa có thông báo nào cho dự án này</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal tài liệu dự án -->
+        <div class="modal fade" id="projectDocumentsModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-file-alt me-2 text-info"></i>Tài liệu đính kèm
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Upload form -->
+                        <form class="mb-4 bg-light rounded" id="uploadForm">
+                            <div class="d-flex align-items-center">
+                                <input type="file" class="form-control me-2" id="fileUpload">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-upload me-1"></i>
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <!-- Documents list -->
+                        <div class="documents-list">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal thảo luận dự án -->
+        <div class="modal fade" id="projectDiscussionsModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-comments me-2 text-secondary"></i>Thảo luận
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Comment form -->
+                        <form class="comment-form">
+                            <div class="form-group">
+                                <textarea class="form-control" rows="3" placeholder="Nhập nội dung thảo luận..."></textarea>
+                            </div>
+                            <div class="text-end mt-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane me-1"></i>Gửi
+                                </button>
+                            </div>
+                        </form>
+        
+                        <!-- Comments list -->
+                        <div class="comments-list">
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </content>
+    <additionalJs>
+        <script th:src="@{/js/projects/project-detail.js}"></script>
+    </additionalJs>
+</body>
+
+</html>

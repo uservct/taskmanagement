@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:replace="~{base :: layout(~{::title}, ~{::content}, ~{::additionalCss}, ~{::additionalJs})}">
+<head>
+    <title>Danh sách dự án - Task Management System</title>
+    <additionalCss>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+        <link rel="stylesheet" th:href="@{/css/projects/index.css}">
+    </additionalCss>
+</head>
+<body>
+    <content class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3"><i class="fas fa-project-diagram me-2"></i>Danh sách dự án</h1>
+            <a href="/projects/create" class="btn btn-primary" sec:authorize="hasRole('ADMIN')">
+                <i class="fas fa-plus me-2"></i>Tạo dự án mới
+            </a>
+        </div>
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <!-- Search box -->
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" id="projectSearch" class="form-control" placeholder="Tìm kiếm dự án...">
+                        </div>
+                    </div>
+                    
+                    <!-- Status filter -->
+                    <div class="col-md-2">
+                        <select class="form-select" id="statusFilter">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="PLANNING">Lập kế hoạch</option>
+                            <option value="IN_PROGRESS">Đang tiến hành</option>
+                            <option value="ON_HOLD">Tạm dừng</option>
+                            <option value="COMPLETED">Hoàn thành</option>
+                            <option value="CANCELLED">Đã hủy</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Priority filter -->
+                    <div class="col-md-2">
+                        <select class="form-select" id="priorityFilter">
+                            <option value="">Tất cả độ ưu tiên</option>
+                            <option value="LOW">Thấp</option>
+                            <option value="MEDIUM">Trung bình</option>
+                            <option value="HIGH">Cao</option>
+                            <option value="URGENT">Khẩn cấp</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Tag filter -->
+                    <div class="col-md-2">
+                        <select class="form-select" id="tagFilter">
+                            <option value="">Tất cả tag</option>
+                            <option value="WEBSITE">Website</option>
+                            <option value="APP">App</option>
+                            <option value="DESIGN">Design</option>
+                            <option value="MARKETING">Marketing</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            <div th:each="project : ${projects}" class="col" th:attr="div-project=${project.id}">
+                <div class="card project-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0" th:text="${project.name}">Task Manager</h5>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-icon" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton" >
+                                    <li><a class="dropdown-item" th:href="@{/projects/{id}(id=${project.id})}"><i class="fas fa-info-circle me-2"></i>Xem chi tiết</a></li>
+                                    <li><a class="dropdown-item" th:href="@{/projects/{id}/edit(id=${project.id})}" sec:authorize="hasRole('ADMIN')"><i class="fas fa-edit me-2"></i>Chỉnh sửa</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" th:attr="delete-button=${project.id}" sec:authorize="hasRole('ADMIN')"><i class="fas fa-trash-alt me-2"></i>Xóa</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge" 
+                                  th:data-status="${project.status.name()}"
+                                  th:text="${
+                                    project.status.name() == 'PLANNING' ? 'Lập kế hoạch' :
+                                    project.status.name() == 'IN_PROGRESS' ? 'Đang tiến hành' :
+                                    project.status.name() == 'ON_HOLD' ? 'Tạm dừng' :
+                                    project.status.name() == 'COMPLETED' ? 'Hoàn thành' :
+                                    project.status.name() == 'CANCELLED' ? 'Đã hủy' : project.status
+                                }"
+                                  th:classappend="${
+                                      project.status.name() == 'PLANNING' ? 'bg-secondary' :
+                                      project.status.name() == 'IN_PROGRESS' ? 'bg-primary' :
+                                      project.status.name() == 'ON_HOLD' ? 'bg-warning' :
+                                      project.status.name() == 'COMPLETED' ? 'bg-success' :
+                                      project.status.name() == 'CANCELLED' ? 'bg-danger' : 'bg-info'
+                                  }">Đang tiến hành</span>
+                            <div class="priority-indicator" th:classappend="${'priority-' + project.priority.name().toLowerCase()}">
+                                <i class="fas fa-flag"></i>
+                                <span th:text="${
+                                    project.priority.name() == 'LOW' ? 'Thấp' :
+                                    project.priority.name() == 'MEDIUM' ? 'Trung bình' :
+                                    project.priority.name() == 'HIGH' ? 'Cao' :
+                                    project.priority.name() == 'URGENT' ? 'Khẩn cấp' : project.priority
+                                }">Cao</span>
+                            </div>
+                        </div>
+                        <div class="project-info mb-3">
+                            <div class="d-flex align-items-center text-muted mb-2">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                <small th:text="${#temporals.format(project.startDate, 'dd/MM/yyyy')} + ' - ' + ${#temporals.format(project.dueDate, 'dd/MM/yyyy')}">26/10/2024 - 26/10/2024</small>
+                            </div>
+                            <div class="d-flex justify-content-start">
+                                <div class="d-flex align-items-center me-3">
+                                    <i class="fas fa-comment-alt me-1 text-muted"></i>
+                                    <small class="text-muted" th:text="${T(java.lang.Math).floor(T(java.lang.Math).random() * 3 + 1).intValue()}">3</small>
+                                </div>
+                                <div class="d-flex align-items-center me-3">
+                                    <i class="fas fa-paperclip me-1 text-muted"></i>
+                                    <small class="text-muted" th:text="${T(java.lang.Math).floor(T(java.lang.Math).random() * 3 + 1).intValue()}">0</small>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-tasks me-1 text-muted"></i>
+                                    <small class="text-muted" 
+                                           th:text="${project.getCompletedTasksCount() + '/' + project.getTasksCount()}">0/0</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <span class="badge bg-info" 
+                                  th:data-tag="${project.tag}"
+                                  th:text="${project.tag}">
+                                <i class="fas fa-tag me-1"></i>
+                                <span th:text="${project.tag}">Project A</span>
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-users me-2 text-muted"></i>
+                                <small class="text-muted" th:text="${project.getMembers().size()} + ' thành viên'">5 thành viên</small>
+                            </div>
+                            <div class="member-avatars">
+                                <img th:each="member, iterStat : ${project.getMembers()}" 
+                                     th:if="${iterStat.index < 5}"
+                                     th:src="${member.avatarUrl}" 
+                                     th:alt="${member.fullName}"
+                                     class="member-avatar"
+                                     th:title="${member.fullName}">
+                                <span th:if="${project.getMembers().size() > 5}" class="more-members">
+                                    +<span th:text="${project.getMembers().size() - 5}"></span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal edit project -->
+        
+    </content>
+    <additionalJs>
+        <script th:src="@{/js/projects/index.js}"></script>
+    </additionalJs>
+</body>
+</html>

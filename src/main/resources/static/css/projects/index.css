@@ -1,0 +1,162 @@
+.project-card {
+    transition: all 0.3s ease;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.project-card:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.35em 0.65em;
+}
+
+.priority-indicator {
+    display: flex;
+    align-items: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.priority-indicator i {
+    margin-right: 0.25rem;
+}
+
+.priority-low { color: #3182ce; }
+.priority-medium { color: #dd6b20; }
+.priority-high { color: #e53e3e; }
+.priority-urgent { color: #9f1224; }
+
+.project-info {
+    font-size: 0.85rem;
+}
+
+.member-avatars {
+    display: flex;
+    align-items: center;
+}
+
+.member-avatar {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    margin-right: -0.5rem;
+    border: 2px solid white;
+    transition: all 0.3s ease;
+}
+
+.member-avatar:hover {
+    transform: scale(1.1);
+    z-index: 1;
+}
+
+.more-members {
+    background-color: #edf2f7;
+    color: #4a5568;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.4rem;
+    border-radius: 9999px;
+    margin-left: 0.25rem;
+}
+
+.btn-icon {
+    padding: 0.25rem 0.5rem;
+    color: #718096;
+}
+
+.btn-icon:hover {
+    color: #2d3748;
+    background-color: #edf2f7;
+}
+
+@media (min-width: 768px) {
+    .row-cols-md-2 > * {
+        flex: 0 0 auto;
+        width: 50%;
+    }
+}
+
+@media (min-width: 992px) {
+    .row-cols-lg-3 > * {
+        flex: 0 0 auto;
+        width: 33.33333%;
+    }
+}
+
+.dropdown-menu {
+    font-size: 0.9rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+}
+
+.dropdown-item i {
+    width: 1rem;
+    text-align: center;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.dropdown-divider {
+    margin: 0.5rem 0;
+}
+
+/* Search and filter styles */
+.input-group-text {
+    background-color: transparent;
+    border-right: none;
+}
+
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: none;
+}
+
+.form-select {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.form-select:hover {
+    border-color: #0d6efd;
+}
+
+.form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: none;
+}
+
+/* Animation for filtering */
+.col {
+    transition: opacity 0.3s ease;
+}
+
+.col[style*="display: none"] {
+    opacity: 0;
+}
+
+.col[style*="display: block"] {
+    opacity: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .input-group, .form-select {
+        margin-bottom: 0.5rem;
+    }
+}

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:replace="~{base :: layout(~{::title}, ~{::content}, ~{::additionalCss}, ~{::additionalJs})}">
+<head>
+    <title>Quản lý tài khoản - Hệ thống quản lý công việc</title>
+    <additionalCss>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+        <link rel="stylesheet" th:href="@{/css/users/index.css}">
+    </additionalCss>
+</head>
+<body>
+    <content class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="fas fa-user-cog me-2"></i>
+                <span>
+                    <th:block sec:authorize="hasRole('ADMIN')">Quản lý tài khoản</th:block>
+                    <th:block sec:authorize="!hasRole('ADMIN')">Thành viên nhóm</th:block>
+                </span>
+            </h1>
+            <div sec:authorize="hasRole('ROLE_ADMIN')">
+                <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                    <i class="fas fa-plus me-2"></i>Tạo tài khoản mới
+                </a>
+            </div>
+        </div>
+
+        <!-- Phần tìm kiếm và lọc -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" id="userSearch" class="form-control" placeholder="Tìm kiếm tài khoản...">
+                        </div>
+                    </div>
+                    <div class="col-md-3" sec:authorize="hasRole('ROLE_ADMIN')">
+                        <select class="form-select" id="roleFilter">
+                            <option value="">Tất cả vai trò</option>
+                            <option value="ADMIN">Quản trị viên</option>
+                            <option value="MEMBER">Thành viên</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3" sec:authorize="hasRole('ROLE_ADMIN')">
+                        <select class="form-select" id="statusFilter">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="ACTIVE">Đang hoạt động</option>
+                            <option value="INACTIVE">Không hoạt động</option>
+                        </select>
+                    </div>
+                    </div>
+                </div>
+            </div>
+
+        <!-- Danh sách người dùng -->
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            <div th:each="user : ${users}" class="col" th:attr="div-user=${user.id}">
+                <div class="card h-100 user-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="d-flex align-items-center">
+                                <img th:src="${user.avatarUrl}" alt="Ảnh đại diện" class="rounded-circle me-3" width="50" height="50">
+                                <div>
+                                    <h5 class="card-title mb-1" th:text="${user.fullName}">Họ và tên</h5>
+                                    <p class="text-muted mb-0 font-monospace" th:text="${user.position}">Chức vụ</p>
+                                </div>
+                            </div>
+                            <div class="dropdown" sec:authorize="hasRole('ROLE_ADMIN')">
+                                <button class="btn btn-sm btn-icon" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" th:href="@{/users/profile/{id}(id=${user.id})}" th:attr="view-user=${user.id}">
+                                        <i class="fas fa-eye me-2"></i>Xem trang cá nhân
+                                    </a></li>
+                                    <li><a class="dropdown-item" th:attr="btn-edit-user=${user.id}">
+                                        <i class="fas fa-edit me-2"></i>Chỉnh sửa
+                                    </a></li>
+                                    <li><a class="dropdown-item" th:attr="btn-reset-password=${user.id}">
+                                        <i class="fas fa-key me-2"></i>Đặt lại mật khẩu
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="#" th:attr="delete-user=${user.id}">
+                                        <i class="fas fa-trash-alt me-2"></i>Xóa
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="user-info">
+                            <div class="mb-2">
+                                <span class="badge role-badge" sec:authorize="hasRole('ROLE_ADMIN')"
+                                      th:classappend="${user.role.name() == 'ADMIN' ? 'bg-primary' : 'bg-info'}"
+                                      th:text="${user.role.name() == 'ADMIN' ? 'Quản trị viên' : 'Thành viên'}">ADMIN
+                                </span>
+                                <span class="badge status-badge" sec:authorize="hasRole('ROLE_ADMIN')"
+                                      th:classappend="${user.status.name() == 'ACTIVE' ? 'bg-success' : 'bg-danger'}" 
+                                      th:text="${user.status.name() == 'ACTIVE' ? 'Đang hoạt động' : 'Đã khóa'}">Đang hoạt động
+                                </span>
+                            </div>
+                            <div class="text-muted small">
+                                <p class="mb-1"><i class="fas fa-envelope me-2"></i><span th:text="${user.email}">email@example.com</span></p>
+                                <p class="mb-1"><i class="fas fa-phone me-2"></i><span th:text="${user.phoneNumber}">0123456789</span></p>
+                                <p class="mb-1"><i class="fas fa-calendar me-2"></i>Tham gia: <span th:text="${#temporals.format(user.createdAt, 'dd/MM/yyyy')}">01/01/2024</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal tạo người dùng -->
+        <div class="modal fade" id="createUserModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-user-plus me-2"></i>Tạo tài khoản mới
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="createUserForm" method="post" class="needs-validation" novalidate>
+                            <!-- Trường tên đăng nhập -->
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                                <div class="invalid-feedback">Vui lòng nhập tên đăng nhập</div>
+                            </div>
+
+                            <!-- Trường họ và tên -->
+                            <div class="mb-3">
+                                <label for="fullName" class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="fullName" name="fullName" required>
+                                <div class="invalid-feedback">Vui lòng nhập họ và tên</div>
+                            </div>
+
+                            <!-- Trường email -->
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                                <div class="invalid-feedback">Vui lòng nhập email hợp lệ</div>
+                            </div>
+
+                            <!-- Trường số điện thoại -->
+                            <div class="mb-3">
+                                <label for="phoneNumber" class="form-label">Số điện thoại</label>
+                                <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" 
+                                       pattern="[0-9]{10}">
+                                <div class="invalid-feedback">Vui lòng nhập số điện thoại hợp lệ</div>
+                            </div>
+
+                            <!-- Trường mật khẩu -->
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Mật khẩu <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="password" name="password" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback">Vui lòng nhập mật khẩu</div>
+                            </div>
+
+                            <!-- Trường chức vụ -->
+                            <div class="mb-3">
+                                <label for="position" class="form-label">Chức vụ</label>
+                                <input type="text" class="form-control" id="position" name="position">
+                            </div>
+
+                            <!-- Trường vai trò -->
+                            <div class="mb-3">
+                                <label for="role" class="form-label">Vai trò <span class="text-danger">*</span></label>
+                                <select class="form-select" id="role" name="role" required>
+                                    <option value="">Chọn vai trò</option>
+                                    <option value="ADMIN">Quản trị viên</option>
+                                    <option value="MEMBER">Thành viên</option>
+                                </select>
+                                <div class="invalid-feedback">Vui lòng chọn vai trò</div>
+                            </div>
+
+                            <!-- Trường trạng thái -->
+                            <div class="mb-3">
+                                <label for="status" class="form-label">Trạng thái <span class="text-danger">*</span></label>
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="ACTIVE">Đang hoạt động</option>
+                                    <option value="INACTIVE">Không hoạt động</option>
+                                </select>
+                                <div class="invalid-feedback">Vui lòng chọn trạng thái</div>
+                            </div>
+
+                            <div class="modal-footer px-0 pb-0">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-2"></i>Hủy
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Lưu
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal chỉnh sửa người dùng -->
+        <div class="modal fade" id="editUserModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-user-edit me-2"></i>Chỉnh sửa tài khoản
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editUserForm" method="patch" class="needs-validation" novalidate>
+                            <!-- Trường tên đăng nhập -->
+                            <div class="mb-3">
+                                <label for="username-edit" class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="username-edit" name="username" required>
+                                <div class="invalid-feedback">Vui lòng nhập tên đăng nhập</div>
+                            </div>
+
+                            <!-- Trường họ và tên -->
+                            <div class="mb-3">
+                                <label for="fullName-edit" class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="fullName-edit" name="fullName" required>
+                                <div class="invalid-feedback">Vui lòng nhập họ và tên</div>
+                            </div>
+
+                            <!-- Trường email -->
+                            <div class="mb-3">
+                                <label for="email-edit" class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email-edit" name="email" required>
+                                <div class="invalid-feedback">Vui lòng nhập email hợp lệ</div>
+                            </div>
+
+                            <!-- Trường số điện thoại -->
+                            <div class="mb-3">
+                                <label for="phoneNumber-edit" class="form-label">Số điện thoại</label>
+                                <input type="tel" class="form-control" id="phoneNumber-edit" name="phoneNumber" 
+                                       pattern="[0-9]{10}">
+                                <div class="invalid-feedback">Vui lòng nhập số điện thoại hợp lệ</div>
+                            </div>
+
+                            <!-- Trường chức vụ -->
+                            <div class="mb-3">
+                                <label for="position-edit" class="form-label">Chức vụ</label>
+                                <input type="text" class="form-control" id="position-edit" name="position">
+                            </div>
+
+                            <!-- Trường vai trò -->
+                            <div class="mb-3">
+                                <label for="role-edit" class="form-label">Vai trò <span class="text-danger">*</span></label>
+                                <select class="form-select" id="role-edit" name="role" required>
+                                    <option value="">Chọn vai trò</option>
+                                    <option value="ADMIN">Quản trị viên</option>
+                                    <option value="MEMBER">Thành viên</option>
+                                </select>
+                                <div class="invalid-feedback">Vui lòng chọn vai trò</div>
+                            </div>
+
+                            <!-- Trường trạng thái -->
+                            <div class="mb-3">
+                                <label for="status-edit" class="form-label">Trạng thái <span class="text-danger">*</span></label>
+                                <select class="form-select" id="status-edit" name="status" required>
+                                    <option value="ACTIVE">Đang hoạt động</option>
+                                    <option value="INACTIVE">Không hoạt động</option>
+                                </select>
+                                <div class="invalid-feedback">Vui lòng chọn trạng thái</div>
+                            </div>
+
+                            <div class="modal-footer px-0 pb-0">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-2"></i>Hủy
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Lưu
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal đặt lại mật khẩu -->
+        <div class="modal fade" id="resetPasswordModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-key me-2"></i>Đặt lại mật khẩu
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Bạn có chắc chắn muốn đặt lại mật khẩu cho tài khoản này?</p>
+                        <p class="text-muted small">Mật khẩu mới sẽ được tạo ngẫu nhiên và hiển thị sau khi đặt lại thành công.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Hủy
+                        </button>
+                        <button type="button" class="btn btn-primary" id="confirmResetPassword">
+                            <i class="fas fa-check me-2"></i>Xác nhận
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+            
+    </content>
+    <additionalJs>
+        <script th:src="@{/js/users/index.js}"></script>
+    </additionalJs>
+</body>
+</html>
