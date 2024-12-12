@@ -11,18 +11,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.nhom6.taskmanagement.dto.password.ChangePasswordDTO;
 import com.nhom6.taskmanagement.dto.user.UserCreateDTO;
 import com.nhom6.taskmanagement.dto.user.UserResponseDTO;
 import com.nhom6.taskmanagement.dto.user.UserUpdateDTO;
+import com.nhom6.taskmanagement.exception.FileUploadException;
+import com.nhom6.taskmanagement.exception.InvalidFileException;
+import com.nhom6.taskmanagement.exception.InvalidPasswordException;
+import com.nhom6.taskmanagement.exception.ResourceNotFoundException;
+import com.nhom6.taskmanagement.exception.UnauthorizedException;
 import com.nhom6.taskmanagement.mapper.UserMapper;
 import com.nhom6.taskmanagement.model.User;
-import com.nhom6.taskmanagement.repository.UserRepository;
-import com.nhom6.taskmanagement.dto.password.ChangePasswordDTO;
-import com.nhom6.taskmanagement.exception.*;
-import com.nhom6.taskmanagement.config.CloudinaryConfig;
-import com.cloudinary.Cloudinary;
-import com.nhom6.taskmanagement.service.CloudinaryService;
 import com.nhom6.taskmanagement.model.UserRole;
+import com.nhom6.taskmanagement.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,8 +37,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
-    private final EmailService emailService;
-    private final OtpService otpService;
     private final CloudinaryService cloudinaryService;
 
     // Get user by id
@@ -118,42 +118,34 @@ public class UserService {
         return "User deleted successfully";
     }
 
-    public void sendChangePasswordOtp(String email) {
-        User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
-            
-        String otp = otpService.generateOtp(email);
-        emailService.sendOtp(email, otp);
-        
-        log.info("Change password OTP sent for user: {}", user.getUsername());
-    }
-    
-    public void verifyOtp(String email, String otp) {
-        // Verify user exists
-        userRepository.findByEmail(email)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
-            
-        // Verify OTP
-        otpService.verifyOtp(email, otp);
-        
-        log.info("OTP verified successfully for email: {}", email);
-    }
-    
+    // Đổi pass sau khi xác nhận đúng pass hiện tại
     public void changePassword(ChangePasswordDTO request) {
-        // Validate passwords match
+        // Kiểm tra mật khẩu mới và xác nhận mật khẩu có khớp
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
             throw new InvalidPasswordException("New password and confirmation do not match");
         }
-        
-        // Get user and update password
+    
+        // Lấy người dùng qua email
         User user = userRepository.findByEmail(request.getEmail())
             .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-            
+    
+        // Kiểm tra mật khẩu hiện tại có đúng không
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new InvalidPasswordException("Current password is incorrect");
+        }
+    
+        // Kiểm tra mật khẩu mới không trùng mật khẩu hiện tại
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new InvalidPasswordException("New password cannot be the same as the current password");
+        }
+    
+        // Cập nhật mật khẩu mới
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
-        
+    
         log.info("Password changed successfully for user: {}", user.getUsername());
     }
+    
 
     public UserResponseDTO updateAvatar(Long userId, MultipartFile file) {
         // Validate file

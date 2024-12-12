@@ -3,6 +3,7 @@ package com.nhom6.taskmanagement.controller.api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -14,14 +15,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.nhom6.taskmanagement.dto.password.ChangePasswordDTO;
 import com.nhom6.taskmanagement.dto.user.UserResponseDTO;
 import com.nhom6.taskmanagement.dto.user.UserUpdateDTO;
-import com.nhom6.taskmanagement.dto.password.OtpVerificationDTO;
-import com.nhom6.taskmanagement.dto.password.ChangePasswordDTO;
-
+import com.nhom6.taskmanagement.exception.InvalidPasswordException;
+import com.nhom6.taskmanagement.exception.ResourceNotFoundException;
 import com.nhom6.taskmanagement.service.UserService;
-
-import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/users")
@@ -57,25 +56,24 @@ public class UserApiController {
         return ResponseEntity.ok(userService.deleteUser(id));
     }
 
-    // Send OTP
-    @PostMapping("/profile/send-otp")
-    public ResponseEntity<String> sendOtp(@RequestParam String email) {
-        userService.sendChangePasswordOtp(email);
-        return ResponseEntity.ok("OTP sent successfully");
-    }
-
-    @PostMapping("/profile/verify-otp")
-    public ResponseEntity<String> verifyOtp(@RequestBody OtpVerificationDTO request) {
-        userService.verifyOtp(request.getEmail(), request.getOtp());
-        return ResponseEntity.ok("OTP verified successfully");
-    }
-
     @PostMapping("/profile/change-password")
     public ResponseEntity<String> changePassword(@RequestBody ChangePasswordDTO request) {
-        System.out.println("Request: ----------------------------------");
-        System.out.println(request);
-        return ResponseEntity.ok("Password changed successfully");
+        try {
+            // Gọi service để thay đổi mật khẩu
+            userService.changePassword(request);
+            return ResponseEntity.ok("Password changed successfully");
+        } catch (InvalidPasswordException e) {
+            // Xử lý trường hợp mật khẩu hiện tại sai hoặc mật khẩu mới và xác nhận không khớp
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (ResourceNotFoundException e) {
+            // Xử lý trường hợp không tìm thấy người dùng
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        } catch (Exception e) {
+            // Xử lý các lỗi không mong muốn
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error changing password");
+        }
     }
+
 
     @PreAuthorize("hasRole('ROLE_ADMIN') or #id == authentication.principal.id")
     @PostMapping("/{id}/avatar")
